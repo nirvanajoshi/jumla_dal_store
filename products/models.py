@@ -52,6 +52,7 @@ class Batch(models.Model):
 
     class Meta:
         ordering = ['harvest_date']
+        verbose_name_plural = 'Batches'
 
     def __str__(self):
         return f"{self.product.name} - {self.source_village} ({self.harvest_date})"
