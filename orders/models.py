@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from products.models import Batch
 
@@ -13,6 +13,48 @@ class Cart(models.Model):
     @property
     def total_price(self):
         return sum(item.subtotal for item in self.items.all())
+
+    @property
+    def total_items(self):
+        return self.items.count()
+
+    def add_item(self, batch, quantity_kg):
+        """Add a batch to cart, or increase quantity if it's already in cart."""
+        if quantity_kg <= 0:
+            raise ValueError("Quantity must be greater than zero.")
+        if quantity_kg > batch.quantity_available:
+            raise ValueError(f"Only {batch.quantity_available}kg available in this batch.")
+
+        item, created = self.items.get_or_create(
+            batch=batch,
+            defaults={'quantity_kg': quantity_kg}
+        )
+        if not created:
+            new_quantity = item.quantity_kg + quantity_kg
+            if new_quantity > batch.quantity_available:
+                raise ValueError(f"Only {batch.quantity_available}kg available in this batch.")
+            item.quantity_kg = new_quantity
+            item.save(update_fields=['quantity_kg'])
+        return item
+
+    def update_item_quantity(self, batch, quantity_kg):
+        """Set an item's quantity directly (used for +/- controls in UI)."""
+        if quantity_kg <= 0:
+            self.remove_item(batch)
+            return None
+        if quantity_kg > batch.quantity_available:
+            raise ValueError(f"Only {batch.quantity_available}kg available in this batch.")
+
+        item = self.items.get(batch=batch)
+        item.quantity_kg = quantity_kg
+        item.save(update_fields=['quantity_kg'])
+        return item
+
+    def remove_item(self, batch):
+        self.items.filter(batch=batch).delete()
+
+    def clear(self):
+        self.items.all().delete()
 
 
 class CartItem(models.Model):
@@ -75,3 +117,45 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity_kg}kg {self.product_name}"
+
+
+def create_order_from_cart(cart, delivery_address, delivery_city, delivery_fee=0):
+    """
+    Converts a Cart into an Order, snapshotting prices and reducing batch stock.
+    Wrapped in a transaction: if anything fails, nothing is committed.
+    """
+    if not cart.items.exists():
+        raise ValueError("Cannot create an order from an empty cart.")
+
+    with transaction.atomic():
+        order = Order.objects.create(
+            user=cart.user,
+            delivery_address=delivery_address,
+            delivery_city=delivery_city,
+            delivery_fee=delivery_fee,
+        )
+
+        for cart_item in cart.items.select_related('batch__product').all():
+            batch = cart_item.batch
+
+            # Re-check stock at the moment of checkout (it may have changed since adding to cart)
+            if cart_item.quantity_kg > batch.quantity_available:
+                raise ValueError(
+                    f"Not enough stock for {batch.product.name} ({batch.source_village}). "
+                    f"Only {batch.quantity_available}kg left."
+                )
+
+            OrderItem.objects.create(
+                order=order,
+                batch=batch,
+                product_name=batch.product.name,
+                source_village=batch.source_village,
+                quantity_kg=cart_item.quantity_kg,
+                price_per_kg_at_order=batch.price_per_kg,
+            )
+
+            batch.reduce_stock(cart_item.quantity_kg)
+
+        cart.clear()
+
+    return order
