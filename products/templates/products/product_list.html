@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Products — Jumla Dal Store{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+
+  {# Header #}
+  <div class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-700">From Jumla to your kitchen</p>
+      <h1 class="font-serif text-4xl font-semibold text-stone-900 tracking-tight">Shop the harvest</h1>
+      <p class="mt-2 text-stone-500">Browse batch-traced dal from the Jumla valley</p>
+    </div>
+    <form method="get" class="flex w-full max-w-sm gap-2">
+      {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+      <label for="catalog-search" class="sr-only">Search products</label>
+      <input id="catalog-search" name="q" value="{{ search_query }}" type="search" placeholder="Search products" class="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-100">
+      <button type="submit" class="rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700">Search</button>
+    </form>
+  </div>
+
+  {# Category filter pills #}
+  <div class="flex flex-wrap gap-2 mb-8" aria-label="Product categories">
+    <a href="{% url 'products:product_list' %}"
+       hx-get="{% url 'products:product_list' %}"
+       hx-target="#product-grid"
+       hx-swap="innerHTML"
+       hx-indicator="#product-loading"
+       class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
+              {% if not active_category %}bg-amber-700 text-white{% else %}bg-stone-100 text-stone-600 hover:bg-stone-200{% endif %}">
+      All
+    </a>
+    {% for cat in categories %}
+     <a href="{% url 'products:product_list' %}?category={{ cat.slug }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+       hx-get="{% url 'products:product_list' %}?category={{ cat.slug }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+       hx-target="#product-grid"
+       hx-swap="innerHTML"
+       hx-indicator="#product-loading"
+       class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors
+              {% if active_category == cat.slug %}bg-amber-700 text-white{% else %}bg-stone-100 text-stone-600 hover:bg-stone-200{% endif %}">
+      {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {# Loading indicator #}
+  <div id="product-loading" class="htmx-indicator text-center py-8 text-stone-400">
+    Loading...
+  </div>
+
+  {# Product grid (replaced by HTMX on filter) #}
+  <div id="product-grid">
+    {% include "products/_product_grid.html" %}
+  </div>
+
+</div>
+{% endblock %}

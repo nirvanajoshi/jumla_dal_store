@@ -1,0 +1,45 @@
+{% load humanize %}
+
+{% if products %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for product in products %}
+    <a href="{% url 'products:product_detail' product.slug %}"
+      class="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl">
+    {# Image #}
+    <div class="aspect-[4/3] bg-[#eee9dc] flex items-center justify-center overflow-hidden">
+      {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+      {% else %}
+        <div class="font-serif text-5xl text-amber-700/30">J</div>
+      {% endif %}
+    </div>
+    <div class="flex flex-1 flex-col p-5">
+      {% if product.category %}
+      <span class="inline-block text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full mb-2">
+        {{ product.category.name }}
+      </span>
+      {% endif %}
+      <h3 class="font-serif text-xl font-semibold text-stone-900 group-hover:text-amber-700 transition-colors">{{ product.name }}</h3>
+      <div class="mt-2 flex items-baseline gap-2">
+        {% if product.starting_price %}
+        <span class="text-lg font-bold text-stone-900">Rs. {{ product.starting_price|intcomma }}</span>
+        <span class="text-sm text-stone-400">/kg</span>
+        {% else %}
+        <span class="text-sm text-stone-400">Price unavailable</span>
+        {% endif %}
+      </div>
+      <div class="mt-auto flex items-center justify-between pt-4 text-sm">
+        <p class="text-stone-500">{{ product.total_stock_kg }}kg available</p>
+        <span class="font-semibold text-amber-700">View detail <span aria-hidden="true">&rarr;</span></span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16">
+  <div class="text-5xl text-stone-200 mb-4">&#128269;</div>
+  <p class="text-stone-500 text-lg">No products found.</p>
+  <p class="text-stone-400 text-sm mt-1">Try a different category or check back later.</p>
+</div>
+{% endif %}

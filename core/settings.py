@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 
     'django_htmx',
     'tailwind',
@@ -59,6 +60,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.cart_context',
             ],
         },
     },
@@ -106,6 +108,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Tailwind
 TAILWIND_APP_NAME = 'theme'
 
+
+# Auth
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Email (console backend for dev - prints emails to terminal instead of sending)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

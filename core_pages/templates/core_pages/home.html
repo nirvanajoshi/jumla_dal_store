@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Jumla Dal Store — Authentic Himalayan Lentils{% endblock %}
+
+{% block content %}
+
+{# ─── HERO ─────────────────────────────────────────────────────────── #}
+<section class="relative overflow-hidden bg-stone-900 text-white">
+  <div class="absolute inset-y-0 right-0 hidden w-2/5 bg-amber-700/20 lg:block"></div>
+  <div class="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-32">
+    <div class="max-w-2xl">
+      <p class="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">
+        From the Hills of Jumla
+      </p>
+      <h1 class="font-serif text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
+        Honest food,<br>
+        <span class="text-amber-400">high-altitude soul.</span>
+      </h1>
+      <p class="mt-6 max-w-lg text-lg leading-relaxed text-stone-300">
+        High-altitude organic lentils, harvested at over 3,000 metres in the
+        Jumla valley. Every batch carries the story of the farmer who grew it
+        and the village it came from.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="{% url 'products:product_list' %}"
+           class="inline-flex items-center rounded-lg bg-amber-500 px-6 py-3 font-semibold text-stone-950 transition hover:bg-amber-400">
+          Explore the harvest
+          <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="hidden min-h-80 items-center justify-center border border-amber-200/20 bg-stone-800/60 p-10 lg:flex">
+      <div class="text-center">
+        <div class="font-serif text-9xl font-semibold leading-none text-amber-400/80">J</div>
+        <p class="mt-3 text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">Grown above 3,000m</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ─── FEATURED PRODUCTS ────────────────────────────────────────────── #}
+{% if featured_products %}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+  <div class="mb-12 text-center">
+    <p class="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-700">Small-batch staples</p>
+    <h2 class="font-serif text-4xl font-semibold tracking-tight text-stone-900">Featured from the valley</h2>
+    <p class="mt-3 text-lg text-stone-500">Handpicked from this season's harvest</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {% for product in featured_products %}
+    <a href="{% url 'products:product_detail' product.slug %}"
+      class="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl">
+      {# Image placeholder #}
+      <div class="aspect-[4/3] bg-[#eee9dc] flex items-center justify-center overflow-hidden">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        {% else %}
+          <div class="font-serif text-6xl text-amber-700/30">J</div>
+        {% endif %}
+      </div>
+      <div class="p-5">
+        {% if product.category %}
+        <span class="inline-block text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full mb-2">
+          {{ product.category.name }}
+        </span>
+        {% endif %}
+        <h3 class="font-serif text-xl font-semibold text-stone-900 group-hover:text-amber-700 transition-colors">{{ product.name }}</h3>
+        <div class="mt-2 flex items-baseline gap-2">
+          {% if product.starting_price %}
+          <span class="text-lg font-bold text-stone-900">Rs. {{ product.starting_price|intcomma }}</span>
+          <span class="text-sm text-stone-400">/kg</span>
+          {% endif %}
+        </div>
+        <p class="mt-1 text-sm text-stone-500">{{ product.total_stock_kg }}kg available</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-10">
+    <a href="{% url 'products:product_list' %}"
+       class="inline-flex items-center text-amber-700 font-semibold hover:text-amber-800 transition-colors">
+      View all products
+      <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+{% endif %}
+
+{# ─── HOW IT WORKS / WHY JUMLA DAL ────────────────────────────────── #}
+<section class="bg-white border-y border-stone-200">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <div class="text-center mb-14">
+      <h2 class="text-3xl font-bold text-stone-900 tracking-tight">Why Jumla Dal?</h2>
+      <p class="mt-3 text-stone-500 text-lg">From seed to your kitchen, every step matters.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+      {# Step 1 #}
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-50 text-amber-700 text-2xl mb-4">&#9968;</div>
+        <h3 class="text-lg font-semibold text-stone-900">High-Altitude Farms</h3>
+        <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+          Grown at over 3,000 metres in the Jumla valley of Karnali Province,
+          where clean mountain air and glacial water produce uniquely flavourful dal.
+        </p>
+      </div>
+      {# Step 2 #}
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-50 text-green-700 text-2xl mb-4">&#127793;</div>
+        <h3 class="text-lg font-semibold text-stone-900">Batch-Traceable</h3>
+        <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+          Every batch is linked to its source village, harvest date, and farmer.
+          You know exactly where your food comes from and who grew it.
+        </p>
+      </div>
+      {# Step 3 #}
+      <div class="text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-stone-100 text-stone-700 text-2xl mb-4">&#128230;</div>
+        <h3 class="text-lg font-semibold text-stone-900">Direct to You</h3>
+        <p class="mt-2 text-stone-500 text-sm leading-relaxed">
+          No middlemen, no excessive markups. Farmers earn fairly and you get
+          authentic dal at honest prices.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ─── CTA ──────────────────────────────────────────────────────────── #}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
+  <h2 class="text-3xl font-bold text-stone-900 tracking-tight">Ready to taste the difference?</h2>
+  <p class="mt-3 text-stone-500 text-lg max-w-lg mx-auto">
+    Browse our selection of batch-traced dal, sourced from the hills of Jumla.
+  </p>
+  <a href="{% url 'products:product_list' %}"
+     class="inline-flex items-center mt-8 px-8 py-3 rounded-lg bg-amber-700 text-white font-semibold hover:bg-amber-800 transition-colors">
+    Shop Now
+  </a>
+</section>
+
+{% endblock %}

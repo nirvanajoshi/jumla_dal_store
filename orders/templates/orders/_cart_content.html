@@ -1,0 +1,85 @@
+{% load humanize %}
+
+{% if cart_items %}
+<div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+  {# Cart items #}
+  <div class="divide-y divide-stone-100">
+    {% for item in cart_items %}
+    <div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4" id="cart-item-{{ item.id }}">
+      {# Product info #}
+      <div class="flex-1 min-w-0">
+        <h3 class="font-semibold text-stone-900">{{ item.batch.product.name }}</h3>
+        <p class="text-sm text-stone-500 mt-0.5">
+          {{ item.batch.source_village }} &middot; Rs. {{ item.batch.price_per_kg|intcomma }}/kg
+        </p>
+      </div>
+
+      {# Quantity controls (HTMX) #}
+      <div class="flex items-center gap-2 shrink-0">
+        <button hx-post="{% url 'orders:update_cart_item' item.id %}"
+                hx-vals='js:{"quantity_kg": Math.max(0.5, parseFloat(document.getElementById("qty-{{ item.id }}").value) - 0.5)}'
+                hx-target="#cart-wrapper"
+                hx-swap="innerHTML"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-300 text-stone-500 hover:bg-stone-100 transition-colors text-sm font-bold"
+                aria-label="Decrease quantity">
+          &minus;
+        </button>
+        <input type="number"
+               id="qty-{{ item.id }}"
+               value="{{ item.quantity_kg }}"
+               min="0.5"
+               step="0.5"
+               class="w-16 px-2 py-1 text-sm border border-stone-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+               onchange="this.form && this.form.dispatchEvent(new Event('submit', {bubbles: true}))">
+        <button hx-post="{% url 'orders:update_cart_item' item.id %}"
+                hx-vals='js:{"quantity_kg": parseFloat(document.getElementById("qty-{{ item.id }}").value) + 0.5}'
+                hx-target="#cart-wrapper"
+                hx-swap="innerHTML"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-stone-300 text-stone-500 hover:bg-stone-100 transition-colors text-sm font-bold"
+                aria-label="Increase quantity">
+          +
+        </button>
+      </div>
+
+      {# Subtotal + Remove #}
+      <div class="flex items-center gap-4 shrink-0 sm:w-40 sm:justify-end">
+        <span class="font-semibold text-stone-900">Rs. {{ item.subtotal|intcomma }}</span>
+        <button hx-post="{% url 'orders:remove_cart_item' item.id %}"
+                hx-target="#cart-wrapper"
+                hx-swap="innerHTML"
+                hx-confirm="Remove {{ item.batch.product.name }} from cart?"
+                class="text-stone-400 hover:text-red-500 transition-colors"
+                aria-label="Remove item">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Cart total + Checkout #}
+  <div class="border-t border-stone-200 p-4 sm:p-6 bg-stone-50">
+    <div class="flex items-baseline justify-between mb-4">
+      <span class="text-lg font-semibold text-stone-900">Total</span>
+      <span class="text-2xl font-bold text-stone-900">Rs. {{ cart.total_price|intcomma }}</span>
+    </div>
+    <a href="{% url 'orders:checkout' %}"
+       class="block w-full text-center px-6 py-3 rounded-lg bg-amber-700 text-white font-semibold hover:bg-amber-800 transition-colors">
+      Proceed to Checkout
+    </a>
+  </div>
+</div>
+
+{% else %}
+{# Empty cart #}
+<div class="text-center py-16 bg-white rounded-xl border border-stone-200">
+  <div class="text-5xl text-stone-200 mb-4">&#128722;</div>
+  <p class="text-stone-500 text-lg">Your cart is empty.</p>
+  <a href="{% url 'products:product_list' %}"
+     class="inline-flex items-center mt-4 px-6 py-2.5 rounded-lg bg-amber-700 text-white font-medium hover:bg-amber-800 transition-colors">
+    Browse Products
+  </a>
+</div>
+{% endif %}

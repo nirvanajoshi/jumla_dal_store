@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ product.name }} — Jumla Dal Store{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+
+  {# Breadcrumb #}
+  <nav class="mb-6 text-sm text-stone-400">
+    <a href="{% url 'products:product_list' %}" class="hover:text-stone-600 transition-colors">Products</a>
+    <span class="mx-2">/</span>
+    <span class="text-stone-600">{{ product.name }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14">
+
+    {# ─── LEFT: Image ──────────────────────────────────────────── #}
+    <div>
+      <div class="aspect-square bg-stone-100 rounded-2xl flex items-center justify-center overflow-hidden border border-stone-200">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+        {% else %}
+          <div class="text-stone-300 text-8xl">&#127805;</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ─── RIGHT: Info + Batches ────────────────────────────────── #}
+    <div>
+      {% if product.category %}
+      <span class="inline-block text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full mb-3">
+        {{ product.category.name }}
+      </span>
+      {% endif %}
+
+      <h1 class="font-serif text-4xl font-semibold tracking-tight text-stone-900 sm:text-5xl">{{ product.name }}</h1>
+
+      {% if product.description %}
+      <p class="mt-4 text-stone-500 leading-relaxed">{{ product.description }}</p>
+      {% endif %}
+
+      {# Stock summary #}
+      <div class="mt-6 flex items-baseline gap-2">
+        {% if product.starting_price %}
+        <span class="text-2xl font-bold text-stone-900">Rs. {{ product.starting_price|intcomma }}</span>
+        <span class="text-stone-400">/kg starting</span>
+        {% endif %}
+        <span class="ml-auto text-sm text-stone-500">{{ product.total_stock_kg }}kg total available</span>
+      </div>
+
+      {# ─── BATCHES ────────────────────────────────────────────── #}
+      <div class="mt-8">
+        <h2 class="text-lg font-semibold text-stone-900 mb-4">Available Batches</h2>
+        <p class="text-sm text-stone-500 mb-4">Each batch is a distinct harvest lot. Pick the one that suits you.</p>
+
+        <div id="batch-list" class="space-y-3">
+          {% for batch in batches %}
+          <div class="border border-stone-200 rounded-2xl p-5 transition-all
+                      {% if batch.quantity_available <= 0 %}opacity-50 bg-stone-50{% else %}hover:border-amber-300 hover:shadow-sm bg-white{% endif %}"
+               id="batch-{{ batch.id }}">
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+              {# Batch info #}
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-semibold text-stone-900">{{ batch.source_village }}</span>
+                  <span class="text-stone-300">&middot;</span>
+                  <span class="text-sm text-stone-500">{{ batch.harvest_date|date:"M Y" }}</span>
+                </div>
+                {% if batch.farmer_name %}
+                <p class="text-xs text-stone-400 mt-0.5">Farmer: {{ batch.farmer_name }}</p>
+                {% endif %}
+                <div class="flex items-baseline gap-3 mt-1">
+                  <span class="font-bold text-stone-900">Rs. {{ batch.price_per_kg|intcomma }}/kg</span>
+                  <span class="text-sm text-stone-500">
+                    {% if batch.quantity_available > 0 %}
+                      {{ batch.quantity_available }}kg available
+                    {% else %}
+                      Out of stock
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+
+              {# Add to cart form (HTMX) #}
+              {% if user.is_authenticated %}
+                {% if batch.quantity_available > 0 %}
+                <div class="flex items-center gap-2 shrink-0">
+                  <input type="number"
+                         id="qty-{{ batch.id }}"
+                         value="1"
+                         min="1"
+                         max="{{ batch.quantity_available }}"
+                         step="0.5"
+                         class="w-20 px-2 py-1.5 text-sm border border-stone-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                  <button hx-post="{% url 'orders:add_to_cart' %}"
+                          hx-vals='js:{"batch_id": {{ batch.id }}, "quantity_kg": document.getElementById("qty-{{ batch.id }}").value}'
+                          hx-target="#batch-{{ batch.id }}"
+                          hx-swap="innerHTML"
+                          class="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700 whitespace-nowrap">
+                    Add to Cart
+                  </button>
+                </div>
+                {% else %}
+                <span class="text-sm text-stone-400 italic shrink-0">Out of stock</span>
+                {% endif %}
+              {% else %}
+              <a href="{% url 'accounts:login' %}?next={{ request.path }}"
+                 class="text-sm text-amber-700 font-medium hover:text-amber-800 shrink-0">
+                Login to order
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-8 text-stone-400">
+            <p>No batches available for this product yet.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 gap-3 border-t border-stone-200 pt-6 text-sm text-stone-600 sm:grid-cols-3">
+        <div><span class="block text-lg text-amber-700">&#10003;</span>Batch traceable</div>
+        <div><span class="block text-lg text-amber-700">&#10003;</span>Fair farmer pricing</div>
+        <div><span class="block text-lg text-amber-700">&#10003;</span>Freshly packed</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

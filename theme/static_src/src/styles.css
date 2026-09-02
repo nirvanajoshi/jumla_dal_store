@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", Georgia, serif;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, #b45309 45%, transparent);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .htmx-indicator {
+    display: none;
+  }
+
+  .htmx-request.htmx-indicator {
+    display: block;
+  }
+}
+
 /**
   * A catch-all path to Django template files, JavaScript, and Python files
   * that contain Tailwind CSS classes and will be scanned by Tailwind to generate the final CSS file.
